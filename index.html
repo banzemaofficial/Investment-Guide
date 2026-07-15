@@ -412,25 +412,21 @@ main{max-width:1180px; margin:0 auto; padding:0 clamp(16px,5vw,48px);}
 }
 .ratio-table-empty svg{width:26px; height:26px; color:var(--gold); opacity:.7;}
 
-.ratio-table-wrap{border:1px solid var(--border-strong); border-top:2px solid var(--gold);}
-.ratio-table{width:100%; border-collapse:collapse; font-size:13px;}
-.ratio-table th{
-  background:var(--bg-alt); padding:10px 14px; text-align:start; font-size:11px; text-transform:uppercase;
-  letter-spacing:.05em; color:var(--text-soft); border-bottom:1px solid var(--border); white-space:nowrap;
-}
-.ratio-table td{padding:12px 14px; border-bottom:1px solid var(--border); vertical-align:top;}
-.ratio-table tr:last-child td{border-bottom:none;}
-.ratio-table-name{min-width:190px;}
-.ratio-row-name{font-weight:700; font-size:13.5px; display:flex; flex-wrap:wrap; align-items:center; gap:7px;}
-.ratio-table-inputs{display:flex; flex-wrap:wrap; gap:8px; min-width:220px;}
+/* Two ratio cards side by side on desktop, one per row on mobile */
+.ratio-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--border); border:1px solid var(--border);}
+@media(max-width:640px){ .ratio-grid{grid-template-columns:1fr;} }
+.ratio-card{background:var(--card); padding:14px 16px 16px; border-top:2px solid var(--gold);}
+.ratio-card-head{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:10px;}
+.ratio-row-name{font-weight:700; font-size:13px; display:flex; flex-wrap:wrap; align-items:center; gap:6px;}
+.ratio-card-inputs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
 .ratio-table-field{display:flex; flex-direction:column; gap:4px; width:105px;}
 .ratio-table-field label{font-size:10px; color:var(--text-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .ratio-table-field input{
   padding:7px 8px; border:1px solid var(--border-strong); background:var(--bg); color:var(--text);
   border-radius:2px; font-size:12.5px; width:100%;
 }
-.ratio-table-result{min-width:110px; white-space:nowrap;}
-.ratio-table-placeholder{color:var(--text-soft);}
+.ratio-card-result{min-height:20px;}
+.ratio-table-placeholder{color:var(--text-soft); font-size:13px;}
 .ratio-result-value.small{font-size:14px; margin-inline-end:8px;}
 
 .ratio-workspace-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
@@ -441,14 +437,20 @@ main{max-width:1180px; margin:0 auto; padding:0 clamp(16px,5vw,48px);}
 }
 
 .ratio-info-btn{
-  width:19px; height:19px; border-radius:50%; border:1px solid var(--border-strong); background:transparent;
-  color:var(--text-soft); font-size:11px; font-weight:700; line-height:1; flex-shrink:0; font-family:'IBM Plex Mono',monospace;
+  width:15px; height:15px; border-radius:50%; border:1px solid var(--border-strong); background:transparent;
+  color:var(--text-soft); font-size:9px; font-weight:700; line-height:1; flex-shrink:0; font-family:'IBM Plex Mono',monospace; padding:0;
 }
 .ratio-info-btn:hover{border-color:var(--gold); color:var(--gold);}
-.ratio-info-box{margin:10px 0; padding:12px 14px; background:var(--bg-alt); border:1px dashed var(--border); min-width:220px;}
-.ratio-info-box .ratio-formula{margin:0 0 10px; padding:0 !important; border:none; background:none;}
-.ratio-info-box .ratio-explain{margin:0 0 8px;}
-.ratio-info-box .ratio-source{padding-bottom:0 !important;}
+
+/* Fixed-position popover: floats above content without shifting layout or scroll position */
+.ratio-popover{
+  display:none; position:fixed; z-index:260; background:var(--card); border:1px solid var(--border-strong);
+  border-top:2px solid var(--gold); box-shadow:0 16px 34px var(--shadow); padding:12px 14px; font-size:12px;
+}
+.ratio-popover.open{display:block;}
+.ratio-popover .ratio-formula{margin:0 0 10px; padding:0 !important; border:none; background:none;}
+.ratio-popover .ratio-explain{margin:0 0 8px;}
+.ratio-popover .ratio-source{padding-bottom:0 !important;}
 
 /* ---------- Company Analysis: ratio catalog (selectable list) ---------- */
 .ratio-catalog-cat{
@@ -468,7 +470,12 @@ main{max-width:1180px; margin:0 auto; padding:0 clamp(16px,5vw,48px);}
 .ratio-catalog-add svg{width:11px; height:11px;}
 .ratio-catalog-item.added .ratio-catalog-add{background:var(--gold); border-color:var(--gold); color:#0a0a0a;}
 .ratio-catalog-name{flex:1; font-size:13px; font-weight:600; display:flex; flex-wrap:wrap; align-items:baseline; gap:6px;}
-.ratio-catalog-grid + .ratio-info-box{margin:-1px 0 10px;}
+
+/* Compact ratio results inside the shareable result card, so it fits without scrolling */
+.ratio-results-compact .share-section-label{margin:4px 0 8px; font-size:10px;}
+.ratio-results-compact .result-row{padding:6px 0; gap:8px;}
+.ratio-results-compact .rl{font-size:11.5px;}
+.ratio-results-compact .rv{font-size:12px;}
 
 .ratio-formula{
   font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--gold); background:var(--bg-alt);
@@ -785,6 +792,8 @@ footer.site{
     <div class="result-modal-body" id="yearEventsBody"></div>
   </div>
 </div>
+
+<div class="ratio-popover" id="ratioPopover"></div>
 
 <footer class="site">
   <div class="footer-credit">by <b>Ahmed Banzema</b></div>
@@ -2971,12 +2980,7 @@ function renderCompanyAnalysis(){
         <div class="ratio-catalog-item reveal" id="cat-item-${r.id}" onclick="toggleRatioInTable('${r.id}')">
           <span class="ratio-catalog-add" id="cat-add-${r.id}">${ICON.plus}</span>
           <span class="ratio-catalog-name">${esc(r.nameEn)} <span class="ratio-item-ar">${esc(r.nameAr)}</span></span>
-          <button class="ratio-info-btn" onclick="event.stopPropagation(); toggleRatioInfo('${r.id}','cat')" aria-label="info">؟</button>
-        </div>
-        <div class="ratio-info-box" id="info-cat-${r.id}" style="display:none">
-          <div class="ratio-formula">${esc(r.formula)}</div>
-          <p class="ratio-explain">${L(r.explain.ar, r.explain.en)}</p>
-          <div class="ratio-source"><strong>${L('منين تجيبها:','Where to find it:')}</strong> ${L(r.source.ar, r.source.en)}</div>
+          <button class="ratio-info-btn" onclick="event.stopPropagation(); toggleRatioInfo('${r.id}', this)" aria-label="info">؟</button>
         </div>`).join('')}
     </div>`).join('')}
   </div>
@@ -2997,8 +3001,6 @@ function addRatioToTable(id){
   renderRatioWorkspace();
   syncCatalogState();
   saveRatioWorkspace();
-  const ws = document.getElementById('ratioWorkspace');
-  if (ws) ws.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 function removeRatioFromTable(id){
   SELECTED_RATIOS = SELECTED_RATIOS.filter(x=>x!==id);
@@ -3017,10 +3019,43 @@ function syncCatalogState(){
     add.innerHTML = isIn ? ICON.check : ICON.plus;
   });
 }
-function toggleRatioInfo(id, ctx){
-  const box = document.getElementById(`info-${ctx}-${id}`);
-  if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+
+/* Fixed-position popover: shows ratio info without shifting page layout or scroll position */
+function toggleRatioInfo(id, btn){
+  const pop = document.getElementById('ratioPopover');
+  const r = RATIOS.find(x=>x.id===id);
+  if (!pop || !r) return;
+  if (pop.classList.contains('open') && pop.dataset.for === id){
+    pop.classList.remove('open');
+    return;
+  }
+  pop.innerHTML = `
+    <div class="ratio-formula">${esc(r.formula)}</div>
+    <p class="ratio-explain">${L(r.explain.ar, r.explain.en)}</p>
+    <div class="ratio-source"><strong>${L('منين تجيبها:','Where to find it:')}</strong> ${L(r.source.ar, r.source.en)}</div>`;
+  pop.dataset.for = id;
+  pop.classList.add('open');
+  const rect = btn.getBoundingClientRect();
+  const popW = Math.min(280, window.innerWidth - 20);
+  let left = rect.left + rect.width/2 - popW/2;
+  left = Math.max(10, Math.min(window.innerWidth - popW - 10, left));
+  pop.style.width = popW + 'px';
+  pop.style.left = left + 'px';
+  const popH = pop.offsetHeight;
+  let top = rect.bottom + 8;
+  if (top + popH > window.innerHeight - 10) top = rect.top - popH - 8;
+  pop.style.top = Math.max(10, top) + 'px';
 }
+document.addEventListener('click', (e)=>{
+  const pop = document.getElementById('ratioPopover');
+  if (pop && pop.classList.contains('open') && !pop.contains(e.target) && !e.target.closest('.ratio-info-btn')){
+    pop.classList.remove('open');
+  }
+});
+window.addEventListener('scroll', ()=>{
+  const pop = document.getElementById('ratioPopover');
+  if (pop) pop.classList.remove('open');
+}, { passive:true, capture:true });
 
 function renderRatioWorkspace(){
   const el = document.getElementById('ratioWorkspace');
@@ -3029,38 +3064,31 @@ function renderRatioWorkspace(){
     el.innerHTML = `<div class="ratio-table-empty">${ICON.stockIcon}<span>${L('لسه معندكش نسب مضافة — اختار من القائمة تحت.','No ratios added yet — pick from the list below.')}</span></div>`;
     return;
   }
-  const rows = SELECTED_RATIOS.map(id => {
+  const cards = SELECTED_RATIOS.map(id => {
     const r = RATIOS.find(x=>x.id===id);
     if (!r) return '';
     const vals = RATIO_INPUT_VALUES[id] || {};
     return `
-    <tr>
-      <td class="ratio-table-name">
+    <div class="ratio-card">
+      <div class="ratio-card-head">
         <div class="ratio-row-name">
           ${esc(r.nameEn)} <span class="ratio-item-ar">${esc(r.nameAr)}</span>
-          <button class="ratio-info-btn" onclick="toggleRatioInfo('${r.id}','row')" aria-label="info">؟</button>
+          <button class="ratio-info-btn" onclick="toggleRatioInfo('${r.id}', this)" aria-label="info">؟</button>
         </div>
-        <div class="ratio-info-box" id="info-row-${r.id}" style="display:none">
-          <div class="ratio-formula">${esc(r.formula)}</div>
-          <p class="ratio-explain">${L(r.explain.ar, r.explain.en)}</p>
-          <div class="ratio-source"><strong>${L('منين تجيبها:','Where to find it:')}</strong> ${L(r.source.ar, r.source.en)}</div>
-        </div>
-      </td>
-      <td class="ratio-table-inputs">
+        <button class="remove-x" onclick="removeRatioFromTable('${r.id}')" aria-label="remove">×</button>
+      </div>
+      <div class="ratio-card-inputs">
         ${r.inputs.map(inp => `
           <div class="ratio-table-field">
             <label>${esc(L(inp.ar, inp.en))}</label>
             <input type="number" value="${vals[inp.id] ?? ''}" oninput="onRatioInputChange('${r.id}','${inp.id}',this.value)">
           </div>`).join('')}
-      </td>
-      <td class="ratio-table-result" id="ratioResult-${r.id}">${ratioResultCellHTML(r, vals)}</td>
-      <td><button class="remove-x" onclick="removeRatioFromTable('${r.id}')" aria-label="remove">×</button></td>
-    </tr>`;
+      </div>
+      <div class="ratio-card-result" id="ratioResult-${r.id}">${ratioResultCellHTML(r, vals)}</div>
+    </div>`;
   }).join('');
   el.innerHTML = `
-    <div class="table-wrap ratio-table-wrap"><table class="ratio-table"><thead><tr>
-      <th>${L('النسبة','Ratio')}</th><th>${L('المعطيات','Inputs')}</th><th>${L('النتيجة','Result')}</th><th></th>
-    </tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="ratio-grid">${cards}</div>
     <div class="ratio-workspace-actions">
       <button class="btn" onclick="openRatioResultsCard()">${ICON.camera} ${L('عرض النتيجة','Show result')}</button>
       <button class="btn secondary" onclick="alert(L('الميزة دي هتتوفر قريبًا.','This feature is coming soon.'))">${ICON.doc} ${L('تصدير النتائج PDF','Export results as PDF')} <span class="soon-badge">Soon</span></button>
@@ -3095,7 +3123,7 @@ function openRatioResultsCard(){
   const company = (companyEl && companyEl.value.trim()) || L('شركة غير محددة','Unnamed company');
   const year = (yearEl && yearEl.value.trim()) || '';
   document.getElementById('resultModalTool').textContent = L('تحليل الشركات','Company Analysis');
-  let html = `<div class="share-section-label">${esc(company)}${year ? ' — ' + esc(year) : ''}</div>`;
+  let html = `<div class="ratio-results-compact"><div class="share-section-label">${esc(company)}${year ? ' — ' + esc(year) : ''}</div>`;
   SELECTED_RATIOS.forEach(id=>{
     const r = RATIOS.find(x=>x.id===id);
     if (!r) return;
@@ -3105,6 +3133,7 @@ function openRatioResultsCard(){
     const displayVal = r.unit === '%' ? pct(result) : (r.unit === 'x' ? fmt(result)+'x' : fmt(result,0));
     html += `<div class="result-row"><span class="rl">${esc(r.nameEn)} <span style="color:var(--text-soft)">(${esc(r.nameAr)})</span></span><span class="rv">${displayVal} — ${ratioLevelLabel(info.level)}</span></div>`;
   });
+  html += `</div>`;
   document.getElementById('resultModalBody').innerHTML = html;
   document.getElementById('resultModal').classList.add('active');
 }
