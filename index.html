@@ -471,6 +471,16 @@ main{max-width:1180px; margin:0 auto; padding:0 clamp(16px,5vw,48px);}
 .ratio-catalog-item.added .ratio-catalog-add{background:var(--gold); border-color:var(--gold); color:#0a0a0a;}
 .ratio-catalog-name{flex:1; font-size:13px; font-weight:600; display:flex; flex-wrap:wrap; align-items:baseline; gap:6px;}
 
+/* ---------- Professional Mode ---------- */
+.pro-input-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:8px;}
+.pro-field{display:flex; flex-direction:column; gap:6px;}
+.pro-field label{font-size:12px; font-weight:600; color:var(--text-soft); display:flex; align-items:center; gap:6px;}
+.pro-field input{
+  padding:10px 12px; border:1px solid var(--border-strong); background:var(--bg); color:var(--text);
+  border-radius:2px; font-size:13.5px; width:100%;
+}
+.pro-result-name{font-weight:600; font-size:13px;}
+
 /* Compact ratio results inside the shareable result card, so it fits without scrolling */
 .ratio-results-compact .share-section-label{margin:4px 0 8px; font-size:10px;}
 .ratio-results-compact .result-row{padding:6px 0; gap:8px;}
@@ -2949,13 +2959,65 @@ function ratioLevelLabel(level){
   return { good:L('قوي','Strong'), mid:L('متوسط','Moderate'), weak:L('ضعيف','Weak'), info:L('معلومة','Info') }[level] || '';
 }
 
+/* ===================== PROFESSIONAL MODE — shared master financial fields ===================== */
+const MASTER_FIELD_GROUPS = [
+  { key:'bs', ar:'الميزانية العمومية', en:'Balance Sheet', fields:[
+    { id:'ca', ar:'الأصول المتداولة', en:'Current assets' },
+    { id:'cl', ar:'الخصوم المتداولة', en:'Current liabilities' },
+    { id:'inv', ar:'المخزون', en:'Inventory' },
+    { id:'avginv', ar:'متوسط المخزون', en:'Average inventory' },
+    { id:'cash', ar:'النقدية وما يعادلها', en:'Cash & equivalents' },
+    { id:'tl', ar:'إجمالي الالتزامات', en:'Total liabilities' },
+    { id:'ltd', ar:'الدين طويل الأجل', en:'Long-term debt' },
+    { id:'eq', ar:'حقوق الملكية', en:'Equity' },
+    { id:'ta', ar:'إجمالي الأصول', en:'Total assets' },
+    { id:'ic', ar:'رأس المال المستثمر', en:'Invested capital' },
+  ]},
+  { key:'is', ar:'قائمة الدخل', en:'Income Statement', fields:[
+    { id:'rev', ar:'الإيرادات', en:'Revenue' },
+    { id:'cogs', ar:'تكلفة المبيعات', en:'COGS' },
+    { id:'oi', ar:'ربح التشغيل', en:'Operating income' },
+    { id:'ebit', ar:'الربح قبل الفوائد والضريبة (EBIT)', en:'EBIT' },
+    { id:'ie', ar:'مصروف الفوائد', en:'Interest expense' },
+    { id:'ni', ar:'صافي الدخل', en:'Net income' },
+    { id:'nopat', ar:'صافي ربح التشغيل بعد الضريبة (NOPAT)', en:'NOPAT' },
+  ]},
+  { key:'mkt', ar:'بيانات السوق', en:'Market Data', fields:[
+    { id:'sh', ar:'عدد الأسهم', en:'Shares outstanding' },
+    { id:'price', ar:'سعر السهم', en:'Share price' },
+    { id:'div', ar:'إجمالي التوزيعات', en:'Dividends paid' },
+  ]},
+];
+const MASTER_FIELDS = MASTER_FIELD_GROUPS.flatMap(g=>g.fields);
+// Ratio-specific input ids that map onto a shared master field, or are derived rather than entered directly
+const MASTER_ALIAS = { te:'eq' };
+const MASTER_DERIVED = {
+  eps: m => m.sh ? (m.ni||0)/m.sh : 0,
+  bvps: m => m.sh ? (m.eq||0)/m.sh : 0,
+  mc: m => (m.price||0)*(m.sh||0),
+  dps: m => m.sh ? (m.div||0)/m.sh : 0,
+};
+function masterFieldFor(inputId){
+  if (MASTER_ALIAS[inputId]) return MASTER_ALIAS[inputId];
+  if (MASTER_DERIVED[inputId]) return null;
+  return inputId;
+}
+function buildRatioValsFromMaster(r, master){
+  const vals = {};
+  r.inputs.forEach(inp=>{
+    if (MASTER_DERIVED[inp.id]) vals[inp.id] = MASTER_DERIVED[inp.id](master);
+    else vals[inp.id] = master[masterFieldFor(inp.id)] || 0;
+  });
+  return vals;
+}
+
 function renderCompanyAnalysis(){
   return `
   <div class="calc-page">
     <div class="back-link" onclick="navigate('services')">${ICON.arrow} ${L('كل الأدوات','All tools')}</div>
     <div class="calc-num">${L('دليل مرجعي وتفاعلي','Interactive reference guide')}</div>
     <h1 class="calc-title">${L('تحليل الشركات','Company Analysis')}</h1>
-    <p class="calc-desc">${L('اختار النسب اللي عايز تحسبها من القائمة تحت، وهتتحط كلها في جدول واحد فوق تدخّل فيه أرقامك وتحسبها على طول.','Pick the ratios you want from the list below — they’ll all land in one table above where you can enter your numbers and calculate right away.')}</p>
+    <p class="calc-desc">${L('اختار النسب اللي عايز تحسبها، أو استخدم وضع المحترفين عشان تدخّل بيانات الشركة مرة واحدة وناخد لك كل النسب أوتوماتيك.','Pick the ratios you want, or use Professional Mode to enter the company’s figures once and get every ratio automatically.')}</p>
     <div class="notice privacy-notice">${ICON.info}${L('بياناتك بتتحفظ في متصفحك بس (مش على سيرفر) عشان تلاقيها لو رجعت تاني.','Your data is saved locally in your browser only (never on a server) so it’s there if you come back.')}</div>
   </div>
 
@@ -2964,25 +3026,58 @@ function renderCompanyAnalysis(){
       <div class="field"><label>${L('اسم الشركة','Company name')}</label><input type="text" id="ratioCompanyName" placeholder="${L('مثلاً: شركة أ للصناعة','e.g. Acme Industries')}" oninput="onRatioMetaChange()"></div>
       <div class="field"><label>${L('سنة التحليل','Analysis year')}</label><input type="text" id="ratioCompanyYear" placeholder="2025" oninput="onRatioMetaChange()"></div>
     </div>
+    <div class="mode-toggle">
+      <button class="mode-toggle-btn" id="analysisModeBtn-normal" onclick="setAnalysisMode('normal')">${L('الوضع العادي','Normal mode')}</button>
+      <button class="mode-toggle-btn" id="analysisModeBtn-pro" onclick="setAnalysisMode('pro')">${L('وضع المحترفين','Professional mode')}</button>
+    </div>
   </div>
 
-  <div class="ratio-workspace" id="ratioWorkspace"></div>
+  <div id="analysisModeNormal">
+    <div class="ratio-workspace" id="ratioWorkspace"></div>
 
-  <div class="section-head" style="padding-top:24px">
-    <div class="kicker">${L('كل النسب','All ratios')}</div>
-    <h2>${L('اضغط على أي نسبة عشان تضيفها للجدول','Tap any ratio to add it to the table')}</h2>
+    <div class="section-head" style="padding-top:24px">
+      <div class="kicker">${L('كل النسب','All ratios')}</div>
+      <h2>${L('اضغط على أي نسبة عشان تضيفها للجدول','Tap any ratio to add it to the table')}</h2>
+    </div>
+    <div class="calc-page" style="padding:0">
+    ${RATIO_CATEGORIES.map(cat => `
+      <div class="ratio-catalog-cat">${L(cat.ar, cat.en)}</div>
+      <div class="ratio-catalog-grid">
+        ${RATIOS.filter(r=>r.cat===cat.key).map(r => `
+          <div class="ratio-catalog-item reveal" id="cat-item-${r.id}" onclick="toggleRatioInTable('${r.id}')">
+            <span class="ratio-catalog-add" id="cat-add-${r.id}">${ICON.plus}</span>
+            <span class="ratio-catalog-name">${esc(r.nameEn)} <span class="ratio-item-ar">${esc(r.nameAr)}</span></span>
+            <button class="ratio-info-btn" onclick="event.stopPropagation(); toggleRatioInfo('${r.id}', this)" aria-label="info">؟</button>
+          </div>`).join('')}
+      </div>`).join('')}
+    </div>
   </div>
-  <div class="calc-page" style="padding:0">
-  ${RATIO_CATEGORIES.map(cat => `
-    <div class="ratio-catalog-cat">${L(cat.ar, cat.en)}</div>
-    <div class="ratio-catalog-grid">
-      ${RATIOS.filter(r=>r.cat===cat.key).map(r => `
-        <div class="ratio-catalog-item reveal" id="cat-item-${r.id}" onclick="toggleRatioInTable('${r.id}')">
-          <span class="ratio-catalog-add" id="cat-add-${r.id}">${ICON.plus}</span>
-          <span class="ratio-catalog-name">${esc(r.nameEn)} <span class="ratio-item-ar">${esc(r.nameAr)}</span></span>
-          <button class="ratio-info-btn" onclick="event.stopPropagation(); toggleRatioInfo('${r.id}', this)" aria-label="info">؟</button>
-        </div>`).join('')}
-    </div>`).join('')}
+
+  <div id="analysisModePro" style="display:none">
+    <div class="section-head" style="padding-top:8px">
+      <div class="kicker">${L('بيانات الشركة','Company figures')}</div>
+      <h2>${L('دخّل الأرقام مرة واحدة، وهنحسبلك كل النسب أوتوماتيك','Enter the figures once, we’ll calculate every ratio automatically')}</h2>
+    </div>
+    ${MASTER_FIELD_GROUPS.map(g => `
+      <div class="ratio-catalog-cat">${L(g.ar, g.en)}</div>
+      <div class="pro-input-grid">
+        ${g.fields.map(f => `
+          <div class="pro-field">
+            <label>${esc(L(f.ar, f.en))} <button class="ratio-info-btn" onclick="toggleMasterFieldInfo('${f.id}', this)" aria-label="info">؟</button></label>
+            <input type="number" id="pro-${f.id}" oninput="onProInputChange()">
+          </div>`).join('')}
+      </div>`).join('')}
+
+    <div class="section-head" style="padding-top:24px">
+      <div class="kicker">${L('النتائج','Results')}</div>
+      <h2>${L('كل النسب المالية الناتجة من بياناتك','Every ratio, calculated from your figures')}</h2>
+    </div>
+    <div id="proResultsTable"></div>
+    <div class="ratio-workspace-actions">
+      <button class="btn" onclick="openProResultsCard()">${ICON.camera} ${L('عرض النتيجة','Show result')}</button>
+      <button class="btn secondary" onclick="alert(L('الميزة دي هتتوفر قريبًا.','This feature is coming soon.'))">${ICON.doc} ${L('تصدير النتائج PDF','Export results as PDF')} <span class="soon-badge">Soon</span></button>
+      <button class="btn secondary" onclick="alert(L('الميزة دي هتتوفر قريبًا.','This feature is coming soon.'))">${ICON.bust} ${L('الحفظ في الملف الشخصي','Save to my profile')} <span class="soon-badge">Soon</span></button>
+    </div>
   </div>
   ${pageFoot()}
   `;
@@ -3020,20 +3115,16 @@ function syncCatalogState(){
   });
 }
 
-/* Fixed-position popover: shows ratio info without shifting page layout or scroll position */
-function toggleRatioInfo(id, btn){
+/* Fixed-position popover: shows info without shifting page layout or scroll position */
+function showPopover(key, html, btn){
   const pop = document.getElementById('ratioPopover');
-  const r = RATIOS.find(x=>x.id===id);
-  if (!pop || !r) return;
-  if (pop.classList.contains('open') && pop.dataset.for === id){
+  if (!pop) return;
+  if (pop.classList.contains('open') && pop.dataset.for === key){
     pop.classList.remove('open');
     return;
   }
-  pop.innerHTML = `
-    <div class="ratio-formula">${esc(r.formula)}</div>
-    <p class="ratio-explain">${L(r.explain.ar, r.explain.en)}</p>
-    <div class="ratio-source"><strong>${L('منين تجيبها:','Where to find it:')}</strong> ${L(r.source.ar, r.source.en)}</div>`;
-  pop.dataset.for = id;
+  pop.innerHTML = html;
+  pop.dataset.for = key;
   pop.classList.add('open');
   const rect = btn.getBoundingClientRect();
   const popW = Math.min(280, window.innerWidth - 20);
@@ -3045,6 +3136,37 @@ function toggleRatioInfo(id, btn){
   let top = rect.bottom + 8;
   if (top + popH > window.innerHeight - 10) top = rect.top - popH - 8;
   pop.style.top = Math.max(10, top) + 'px';
+}
+function toggleRatioInfo(id, btn){
+  const r = RATIOS.find(x=>x.id===id);
+  if (!r) return;
+  const html = `
+    <div class="ratio-formula">${esc(r.formula)}</div>
+    <p class="ratio-explain">${L(r.explain.ar, r.explain.en)}</p>
+    <div class="ratio-source"><strong>${L('منين تجيبها:','Where to find it:')}</strong> ${L(r.source.ar, r.source.en)}</div>`;
+  showPopover('ratio-'+id, html, btn);
+}
+function toggleMasterFieldInfo(fieldId, btn){
+  const usedBy = RATIOS.filter(r => r.inputs.some(inp => masterFieldFor(inp.id) === fieldId));
+  const list = usedBy.length
+    ? usedBy.map(r => `${esc(r.nameEn)} <span class="ratio-item-ar">(${esc(r.nameAr)})</span>`).join('<br>')
+    : L('مش مستخدمة في أي نسبة حاليًا.','Not used by any ratio right now.');
+  const html = `<p class="ratio-explain" style="margin-top:0"><strong>${L('هنستخدم الرقم ده في حساب:','We’ll use this number to calculate:')}</strong></p><p class="ratio-explain">${list}</p>`;
+  showPopover('field-'+fieldId, html, btn);
+}
+function toggleMasterResultInfo(ratioId, btn){
+  const r = RATIOS.find(x=>x.id===ratioId);
+  if (!r) return;
+  const master = getProMasterValues();
+  const vals = buildRatioValsFromMaster(r, master);
+  const result = r.calc(vals);
+  const info = r.interpret(result);
+  const usedNumbers = r.inputs.map(inp => `${L(inp.ar, inp.en)}: ${fmt(vals[inp.id] || 0, 2)}`).join('<br>');
+  const html = `
+    <div class="ratio-formula">${esc(r.formula)}</div>
+    <p class="ratio-explain"><strong>${L('الأرقام اللي استخدمناها:','Numbers used:')}</strong><br>${usedNumbers}</p>
+    <p class="ratio-explain">${L(info.ar, info.en)}</p>`;
+  showPopover('result-'+ratioId, html, btn);
 }
 document.addEventListener('click', (e)=>{
   const pop = document.getElementById('ratioPopover');
@@ -3138,6 +3260,77 @@ function openRatioResultsCard(){
   document.getElementById('resultModal').classList.add('active');
 }
 
+/* ---------- Professional Mode ---------- */
+let ANALYSIS_MODE = 'normal';
+let PRO_MASTER_VALUES = {};
+
+function setAnalysisMode(mode){
+  ANALYSIS_MODE = mode;
+  document.getElementById('analysisModeNormal').style.display = mode === 'normal' ? 'block' : 'none';
+  document.getElementById('analysisModePro').style.display = mode === 'pro' ? 'block' : 'none';
+  document.getElementById('analysisModeBtn-normal').classList.toggle('active', mode==='normal');
+  document.getElementById('analysisModeBtn-pro').classList.toggle('active', mode==='pro');
+  saveRatioWorkspace();
+}
+function getProMasterValues(){
+  const vals = {};
+  MASTER_FIELDS.forEach(f => vals[f.id] = PRO_MASTER_VALUES[f.id] || 0);
+  return vals;
+}
+function onProInputChange(){
+  MASTER_FIELDS.forEach(f => {
+    const el = document.getElementById(`pro-${f.id}`);
+    PRO_MASTER_VALUES[f.id] = el ? (+el.value || 0) : 0;
+  });
+  renderProResultsTable();
+  saveRatioWorkspace();
+}
+function renderProResultsTable(){
+  const el = document.getElementById('proResultsTable');
+  if (!el) return;
+  const master = getProMasterValues();
+  const rows = RATIOS.map(r => {
+    const vals = buildRatioValsFromMaster(r, master);
+    const hasAny = r.inputs.some(inp => vals[inp.id]);
+    let resultCell = `<span class="ratio-table-placeholder">—</span>`;
+    if (hasAny){
+      const result = r.calc(vals);
+      const info = r.interpret(result);
+      const displayVal = r.unit === '%' ? pct(result) : (r.unit === 'x' ? fmt(result)+'x' : fmt(result,0));
+      resultCell = `<span class="ratio-result-value small">${displayVal}</span><span class="ratio-result-badge level-${info.level}">${ratioLevelLabel(info.level)}</span>`;
+    }
+    return `<tr>
+      <td class="pro-result-name">${esc(r.nameEn)} <span class="ratio-item-ar">${esc(r.nameAr)}</span></td>
+      <td class="ratio-table-result">${resultCell}</td>
+      <td><button class="ratio-info-btn" onclick="toggleMasterResultInfo('${r.id}', this)" aria-label="info">؟</button></td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<div class="table-wrap"><table><thead><tr>
+    <th>${L('النسبة','Ratio')}</th><th>${L('النتيجة','Result')}</th><th></th>
+  </tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function openProResultsCard(){
+  const master = getProMasterValues();
+  const companyEl = document.getElementById('ratioCompanyName');
+  const yearEl = document.getElementById('ratioCompanyYear');
+  const company = (companyEl && companyEl.value.trim()) || L('شركة غير محددة','Unnamed company');
+  const year = (yearEl && yearEl.value.trim()) || '';
+  document.getElementById('resultModalTool').textContent = L('تحليل الشركات — وضع المحترفين','Company Analysis — Professional mode');
+  let html = `<div class="ratio-results-compact"><div class="share-section-label">${esc(company)}${year ? ' — ' + esc(year) : ''}</div>`;
+  RATIOS.forEach(r=>{
+    const vals = buildRatioValsFromMaster(r, master);
+    const hasAny = r.inputs.some(inp => vals[inp.id]);
+    if (!hasAny) return;
+    const result = r.calc(vals);
+    const info = r.interpret(result);
+    const displayVal = r.unit === '%' ? pct(result) : (r.unit === 'x' ? fmt(result)+'x' : fmt(result,0));
+    html += `<div class="result-row"><span class="rl">${esc(r.nameEn)} <span style="color:var(--text-soft)">(${esc(r.nameAr)})</span></span><span class="rv">${displayVal} — ${ratioLevelLabel(info.level)}</span></div>`;
+  });
+  html += `</div>`;
+  document.getElementById('resultModalBody').innerHTML = html;
+  document.getElementById('resultModal').classList.add('active');
+}
+
 /* ---------- Persistence (localStorage) ---------- */
 function saveRatioWorkspace(){
   try {
@@ -3148,6 +3341,8 @@ function saveRatioWorkspace(){
       values: RATIO_INPUT_VALUES,
       company: companyEl ? companyEl.value : '',
       year: yearEl ? yearEl.value : '',
+      mode: ANALYSIS_MODE,
+      proValues: PRO_MASTER_VALUES,
     }));
   } catch(e){}
 }
@@ -3158,14 +3353,22 @@ function initRatioWorkspace(){
       const data = JSON.parse(raw);
       SELECTED_RATIOS = Array.isArray(data.selected) ? data.selected.filter(id => RATIOS.some(r=>r.id===id)) : [];
       RATIO_INPUT_VALUES = data.values && typeof data.values === 'object' ? data.values : {};
+      PRO_MASTER_VALUES = data.proValues && typeof data.proValues === 'object' ? data.proValues : {};
+      ANALYSIS_MODE = data.mode === 'pro' ? 'pro' : 'normal';
       const companyEl = document.getElementById('ratioCompanyName');
       const yearEl = document.getElementById('ratioCompanyYear');
       if (companyEl) companyEl.value = data.company || '';
       if (yearEl) yearEl.value = data.year || '';
+      MASTER_FIELDS.forEach(f => {
+        const el = document.getElementById(`pro-${f.id}`);
+        if (el && PRO_MASTER_VALUES[f.id]) el.value = PRO_MASTER_VALUES[f.id];
+      });
     }
   } catch(e){}
   renderRatioWorkspace();
   syncCatalogState();
+  renderProResultsTable();
+  setAnalysisMode(ANALYSIS_MODE);
 }
 PAGES['company-analysis'] = { render: renderCompanyAnalysis, after: initRatioWorkspace };
 
