@@ -429,8 +429,11 @@ main{max-width:1180px; margin:0 auto; padding:0 clamp(16px,5vw,48px);}
 .ratio-table-placeholder{color:var(--text-soft); font-size:13px;}
 .ratio-result-value.small{font-size:14px; margin-inline-end:8px;}
 
-.ratio-workspace-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
-.ratio-workspace-actions .btn{margin-top:0;}
+.ratio-workspace-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
+.ratio-workspace-actions .btn{
+  margin-top:0; padding:9px 16px; font-size:12.5px; border-radius:999px;
+}
+.ratio-workspace-actions .btn svg{width:14px; height:14px;}
 .soon-badge{
   display:inline-block; font-size:9.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
   background:var(--gold); color:#0a0a0a; padding:2px 7px; border-radius:999px; margin-inline-start:4px;
@@ -863,7 +866,6 @@ const SERVICES = [
   { id:'calc1', title:L2('حاسبة العائد الاستثماري','Investment Return Calculator'), desc:L2('احسب قيمة استثمارك في المستقبل، وقيّم الأسهم والصناديق والسندات بكل التفاصيل.','Project your investment’s future value, and evaluate stocks, funds and bonds in full detail.') },
   { id:'calc2', title:L2('حاسبة التضخم','Inflation Calculator'), desc:L2('اعرف قوة فلوسك الشرائية هتقل قد إيه مع الوقت، أو كانت نقصت قد إيه من زمان لحد دلوقتي.','See how much purchasing power your money loses over time — forward or looking back.') },
   { id:'calc3', title:L2('أول مليون','First Million'), desc:L2('حط المبلغ اللي بتدخره كل شهر أو سنة، واعرف هتوصل لأول مليون بعد كام سنة.','Enter what you save monthly or yearly and find out when you’ll hit your first million.') },
-  { id:'calc4', title:L2('حاسبة القرض','Loan Calculator'), desc:L2('اعرف قسطك الشهري، إجمالي الفوائد، وجدول السداد بالكامل.','Work out your monthly installment, total interest, and the full repayment schedule.') },
   { id:'calc5', title:L2('تقسيم المحفظة الاستثمارية','Portfolio Allocation'), desc:L2('بناءً على سنك، هنقترح توزيع المحفظة بأكتر من طريقة ومدرسة استثمارية.','Based on your age, get portfolio splits from several investing schools of thought.') },
   { id:'calc6', title:L2('قاعدة الـ72','Rule of 72'), desc:L2('اعرف استثمارك هيتضاعف امتى بس من خلال قسمة بسيطة.','Find out when your investment doubles with one simple division.') },
   { id:'calc7', title:L2('حاسبة النسب المالية','Financial Ratios Calculator'), desc:L2('دخّل أرقام قوائم الشركة واحسب أهم النسب المالية اللي تقيّم بيها السهم.','Enter a company’s financial statement figures and compute the key ratios that evaluate it.') },
@@ -878,7 +880,7 @@ const SERVICES = [
 function L2(ar,en){ return {ar,en}; }
 function ST(field){ return LANG==='ar' ? field.ar : field.en; }
 const FEATURED_SETS = {
-  regular: ['calc3','calc6','calc9','calc12','calc4','calc11'],
+  regular: ['calc3','calc6','calc9','calc12','calc2','calc11'],
   investor: ['calc1','calc7','calc8','calc10','calc5','calc13'],
 };
 let SITE_MODE = 'regular';
@@ -1537,7 +1539,7 @@ function renderHome(){
     </div>
 
     <div class="stat-bar">
-      <div class="stat-item"><div class="stat-num">14</div><div class="stat-label">${L('أداة','Tools')}</div></div>
+      <div class="stat-item"><div class="stat-num">13</div><div class="stat-label">${L('أداة','Tools')}</div></div>
       <div class="stat-item"><div class="stat-num">20+</div><div class="stat-label">${L('نسبة مالية','Ratios')}</div></div>
       <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">${L('مجاني','Free')}</div></div>
     </div>
@@ -1552,7 +1554,7 @@ function renderHome(){
       <div class="step-num">01</div>
       <div class="step-icon">${ICON.globe}</div>
       <div class="step-title">${L('اختار الأداة','Choose a tool')}</div>
-      <div class="step-text">${L('من الـ14 أداة المتاحة، اختار اللي يناسب قرارك.','Pick the one that fits the decision you’re making, from all 14 tools.')}</div>
+      <div class="step-text">${L('من الـ13 أداة المتاحة، اختار اللي يناسب قرارك.','Pick the one that fits the decision you’re making, from all 13 tools.')}</div>
     </div>
     <div class="step-card reveal">
       <div class="step-num">02</div>
@@ -1653,7 +1655,7 @@ function renderHome(){
   </div>
   <div class="services-grid featured-grid" id="featuredGrid">${renderServiceCards(featured)}</div>
   <div class="section-foot-cta">
-    <button class="btn secondary" onclick="navigate('services')">${L('شوف كل الـ14 أداة','See all 14 tools')} ${ICON.arrow}</button>
+    <button class="btn secondary" onclick="navigate('services')">${L('شوف كل الـ13 أداة','See all 13 tools')} ${ICON.arrow}</button>
   </div>
   `;
 }
@@ -1663,7 +1665,7 @@ function renderServices(){
   <div class="calc-page" style="padding-top:36px">
     <div class="back-link" onclick="navigate('home')">${ICON.arrow} ${L('الصفحة الرئيسية','Home')}</div>
     <div class="calc-num">${L('كل الأدوات','All tools')}</div>
-    <h1 class="calc-title">${L('14 أداة تساعدك تاخد قرارك الاستثماري','14 tools to help you make your investment decisions')}</h1>
+    <h1 class="calc-title">${L('13 أداة تساعدك تاخد قرارك الاستثماري','13 tools to help you make your investment decisions')}</h1>
     <p class="calc-desc">${L('اضغط على أي أداة عشان تفتح صفحتها الخاصة بكل التفاصيل والحاسبة.','Tap any tool to open its dedicated page with the full calculator and details.')}</p>
   </div>
   <div class="services-grid" style="margin-top:8px; margin-bottom:64px">${renderServiceCards(SERVICES)}</div>
@@ -2082,61 +2084,10 @@ function calc3_run(){
     <div class="result-row"><span class="rl">${L('الرصيد التقريبي عند الوصول','Approx. balance reached')}</span><span class="rv">${fmtC(bal,0)}</span></div>`;
 }
 
-/* ===================== CALC 4 — LOAN CALCULATOR ===================== */
-PAGES.calc4 = { render: renderCalc4 };
-function renderCalc4(){
-  return pageHead(4,
-    'حاسبة القرض','Loan Calculator',
-    'اعرف قسطك الشهري وإجمالي الفوائد وجدول السداد بالتفصيل.',
-    'Work out your monthly installment, total interest, and a full repayment schedule.'
-  ) + `
-  <div class="notice warn">${ICON.warn} ${L('تنبيه: القروض الربوية محرّمة شرعًا. الأداة دي لأغراض الحساب والتوضيح فقط، مش تشجيع على الاقتراض.','Warning: interest-based loans are religiously prohibited (haram). This tool is for calculation and awareness only — not an encouragement to borrow.')}</div>
-  <div class="calc-grid">
-    <div>
-      <div class="field"><label>${L('مبلغ القرض','Loan amount')}</label><input type="number" id="c4_amt" placeholder="200000"></div>
-      <div class="row2">
-        <div class="field"><label>${L('سنين السداد','Repayment years')}</label><input type="number" id="c4_years" placeholder="5"></div>
-        <div class="field"><label>${L('نسبة الفائدة السنوية %','Annual interest rate %')}</label><input type="number" id="c4_rate" placeholder="18"></div>
-      </div>
-      <button class="btn" onclick="calc4_run()">${L('احسب','Calculate')}</button>
-    </div>
-    <div class="result-panel" id="c4_out"><div class="placeholder">${L('النتيجة هتظهر هنا','Your result will appear here')}</div></div>
-  </div>
-  <div id="c4_table"></div>
-  ` + pageFoot();
-}
-function calc4_run(){
-  const amt = +document.getElementById('c4_amt').value||0;
-  const years = +document.getElementById('c4_years').value||1;
-  const rate = +document.getElementById('c4_rate').value||0;
-  const i = rate/100/12, n = years*12;
-  const installment = i===0 ? amt/n : amt*i/(1-Math.pow(1+i,-n));
-  const totalPay = installment*n;
-  const totalInterest = totalPay - amt;
-
-  document.getElementById('c4_out').innerHTML = `
-    <div class="result-headline">${fmtC(installment,0)}</div>
-    <div class="result-sub">${L('القسط الشهري','Monthly installment')}</div>
-    <div class="result-row"><span class="rl">${L('إجمالي المدفوعات','Total payments')}</span><span class="rv">${fmtC(totalPay,0)}</span></div>
-    <div class="result-row"><span class="rl">${L('إجمالي الفوائد','Total interest')}</span><span class="rv">${fmtC(totalInterest,0)}</span></div>`;
-
-  let bal = amt, rows = '';
-  for (let m=1; m<=n; m++){
-    const interestPortion = bal*i;
-    const principalPortion = installment - interestPortion;
-    bal -= principalPortion;
-    rows += `<tr><td>${m}</td><td>${fmt(installment,0)}</td><td>${fmt(principalPortion,0)}</td><td>${fmt(interestPortion,0)}</td><td>${fmt(Math.max(bal,0),0)}</td></tr>`;
-  }
-  document.getElementById('c4_table').innerHTML = `
-    <div class="table-wrap" style="max-height:420px; overflow-y:auto;"><table><thead><tr>
-      <th>${L('الشهر','Month')}</th><th>${L('القسط','Installment')}</th><th>${L('أصل','Principal')}</th><th>${L('فائدة','Interest')}</th><th>${L('المتبقي','Remaining')}</th>
-    </tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-
 /* ===================== CALC 5 — PORTFOLIO ALLOCATION BY AGE ===================== */
 PAGES.calc5 = { render: renderCalc5 };
 function renderCalc5(){
-  return pageHead(5,
+  return pageHead(4,
     'تقسيم المحفظة الاستثمارية','Portfolio Allocation',
     'حط سنك وهنوريك اقتراحات لتوزيع المحفظة بأكتر من مدرسة استثمارية معروفة.',
     'Enter your age and see suggested portfolio splits from several well-known investing schools of thought.'
@@ -2175,7 +2126,7 @@ function calc5_run(){
 /* ===================== CALC 6 — RULE OF 72 ===================== */
 PAGES.calc6 = { render: renderCalc6 };
 function renderCalc6(){
-  return pageHead(6,
+  return pageHead(5,
     'قاعدة الـ72','Rule of 72',
     'اعرف استثمارك هيتضاعف امتى بقسمة بسيطة: 72 على العائد السنوي المتوقع.',
     'Find out when your investment doubles with a simple division: 72 divided by your expected annual return.'
@@ -2203,7 +2154,7 @@ function calc6_run(){
 /* ===================== CALC 7 — FINANCIAL RATIOS CALCULATOR ===================== */
 PAGES.calc7 = { render: renderCalc7 };
 function renderCalc7(){
-  return pageHead(7,
+  return pageHead(6,
     'حاسبة النسب المالية','Financial Ratios Calculator',
     'دخّل أرقام قوائم الشركة (الميزانية وقائمة الدخل) واحسب أهم النسب المالية اللي بيقيّم بيها المحللين الشركة.',
     'Enter a company’s balance sheet and income statement figures and compute the key ratios analysts use to evaluate it.'
@@ -2274,7 +2225,7 @@ function calc7_run(){
 /* ===================== CALC 8 — STOCK SCREENER ===================== */
 PAGES.calc8 = { render: renderCalc8 };
 function renderCalc8(){
-  return pageHead(8,
+  return pageHead(7,
     'فاحص الأسهم','Stock Screener',
     'دخّل أرقام السهم الأساسية وهنقيّمه على أساس كل مؤشر ونديك خلاصة عامة.',
     'Enter a stock’s core numbers and we’ll score it metric by metric, then give an overall verdict.'
@@ -2326,7 +2277,7 @@ function calc8_run(){
 /* ===================== CALC 9 — BUDGET PLANNER AI ===================== */
 PAGES.calc9 = { render: renderCalc9 };
 function renderCalc9(){
-  return pageHead(9,
+  return pageHead(8,
     'مخطط الميزانية بالـ AI','Budget Planner AI',
     'اكتب دخلك الشهري وهنقسمهولك على احتياجات وادخار واستثمار وترفيه، وهيديك الـ AI اقتراحات مخصصة.',
     'Enter your monthly income and get it split across needs, savings, investing and fun — plus personalized AI suggestions.'
@@ -2389,7 +2340,7 @@ function fallbackTips(){
 /* ===================== CALC 10 — FAIR VALUE CALCULATOR ===================== */
 PAGES.calc10 = { render: renderCalc10 };
 function renderCalc10(){
-  return pageHead(10,
+  return pageHead(9,
     'حاسبة القيمة العادلة','Fair Value Calculator',
     'احسب القيمة العادلة للسهم بأكتر من طريقة: التدفقات النقدية المخصومة، معادلة جراهام، ومقارنة الـ P/E.',
     'Estimate a stock’s fair value using three methods: discounted cash flow, the Graham formula, and P/E comparison.'
@@ -2491,7 +2442,7 @@ function calc10_pe(){
 /* ===================== CALC 11 — RETIREMENT CALCULATOR ===================== */
 PAGES.calc11 = { render: renderCalc11 };
 function renderCalc11(){
-  return pageHead(11,
+  return pageHead(10,
     'حاسبة التقاعد','Retirement Calculator',
     'حط المبلغ اللي بتضيفه كل شهر لمدخراتك، وهنوريك هتوصل لمعاش قد إيه عند التقاعد، وهل ده كافي، وبعد التقاعد تقدر تسحب كام شهريًا بأكتر من طريقة.',
     'Enter what you add to your savings each month, and we’ll show you the nest egg you’ll reach at retirement, whether it’s enough, and how much you can withdraw monthly afterward, across a few strategies.'
@@ -2563,7 +2514,7 @@ function calc11_run(){
 PAGES.calc12 = { render: renderCalc12 };
 let c12_months = 6;
 function renderCalc12(){
-  return pageHead(12,
+  return pageHead(11,
     'حاسبة صندوق الطوارئ','Emergency Fund Calculator',
     'احسب حجم صندوق الطوارئ المناسب ليك بناءً على مصاريفك الشهرية وعدد الشهور اللي عايز تغطيها.',
     'Work out the emergency fund size that fits you, based on your monthly expenses and how many months you want covered.'
@@ -2606,7 +2557,7 @@ let c13_holdings = [];
 const C13_PALETTE = ['#cea968','#4a4a4a','#8f8f8f','#e6cfa0','#6b6b6b','#a9895a','#c9c3b6','#5e5245'];
 
 function renderCalc13(){
-  return pageHead(13,
+  return pageHead(12,
     'متابع المحفظة','Portfolio Tracker',
     'ضيف أسهمك وصناديقك الاستثمارية وهيحسبلك أرباحك وخسائرك ويرسملك مخطط توزيع للمحفظة، والبيانات محفوظة لجلستك الحالية بس.',
     'Add the stocks and mutual funds you hold — we’ll compute your gains/losses and chart your allocation. Data is kept only for this session.'
@@ -2706,7 +2657,7 @@ PAGES.calc13.after = c13_render;
 PAGES.calc14 = { render: renderCalc14, after: goldRender };
 let gold_lots = [];
 function renderCalc14(){
-  return pageHead(14,
+  return pageHead(13,
     'حاسبة الدهب','Gold Calculator',
     'سجّل كل عملية شراء دهب عملتها من سنين مختلفة بسعرها وعمولتها (نسبة أو مبلغ ثابت)، وحط سعر الجرام اليوم، وهنحسبلك مكسبك أو خسارتك في كل عملية وفي الإجمالي.',
     'Log every gold purchase you’ve made across different years with its price and commission (a percentage or a flat amount), enter today’s price per gram, and we’ll work out your gain or loss on each one — and overall.'
